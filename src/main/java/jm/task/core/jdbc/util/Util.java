@@ -1,8 +1,23 @@
 package jm.task.core.jdbc.util;
 
+import jm.task.core.jdbc.model.User;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+import org.hibernate.service.ServiceRegistry;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 public class Util implements Closeable {
     private final String URL = "jdbc:mysql://localhost:3306/mydbtest";
@@ -10,7 +25,41 @@ public class Util implements Closeable {
     private final String PASSWORD = "Dragarz";
     private Connection connection;
     private Statement statement;
-   // private PreparedStatement preparedStatement = null;
+
+    //####################################################
+    private static StandardServiceRegistry standardServiceRegistry;
+    private static SessionFactory sessionFactory;
+
+    static {
+        // Creating StandardServiceRegistryBuilder
+        StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
+
+        // Hibernate settings which is equivalent to hibernate.cfg.xml's properties
+        Map<String, String> dbSettings = new HashMap<>();
+        dbSettings.put(Environment.URL, "jdbc:mysql://localhost:3306/mydbtest");
+        dbSettings.put(Environment.USER, "Dragarz");
+        dbSettings.put(Environment.PASS, "Dragarz");
+        dbSettings.put(Environment.DRIVER, "com.mysql.jdbc.Driver");
+        dbSettings.put(Environment.DIALECT, "org.hibernate.dialect.MySQLDialect");
+
+        // Apply database settings
+        registryBuilder.applySettings(dbSettings);
+        // Creating registry
+        standardServiceRegistry = registryBuilder.build();
+        // Creating MetadataSources
+        MetadataSources sources = new MetadataSources(standardServiceRegistry);
+        // Creating Metadata
+        Metadata metadata = sources.getMetadataBuilder().build();
+        // Creating SessionFactory
+        sessionFactory = metadata.getSessionFactoryBuilder().build();
+    }
+    //Utility method to return SessionFactory
+    public static SessionFactory getSessionFactory() {
+        return sessionFactory;
+    }
+
+    //####################################################
+    // private PreparedStatement preparedStatement = null;
     public Util(){
         try {
             connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
